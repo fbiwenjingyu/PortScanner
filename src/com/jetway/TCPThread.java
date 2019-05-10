@@ -1,12 +1,16 @@
 package com.jetway;
 
-import java.net.*;
-import java.io.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TCPThread extends Thread{
+	
+	static List<Integer>  ports = new CopyOnWriteArrayList<>();
 	
 	public static InetAddress hostAddress;
 	
@@ -71,17 +75,26 @@ public class TCPThread extends Thread{
 				try{
 					//在给定主机名的情况下确定主机的 IP 地址
 					hostAddress=InetAddress.getByName(ipAll);
+					boolean reachable = hostAddress.isReachable(5000);
+					if(!reachable) {
+						continue;
+					}
 				}
 				catch(UnknownHostException e){
+					
+				}catch (IOException e) {
+					
 				}
 				
 				//不同的端口循环扫描
-				for (i = MIN_port+threadnum; i < MAX_port + Integer.parseInt(ThreadScan.maxThread.getText()); i += Integer.parseInt(ThreadScan.maxThread.getText())){
+				for (i = MIN_port+threadnum; i <= MAX_port; i += Integer.parseInt(ThreadScan.maxThread.getText())){
 
 					try{
 						theTCPsocket=new Socket(hostAddress,i);
 						theTCPsocket.close();
-						ThreadScan.Result.append(hostname+":"+i);
+						synchronized (TCPThread.class) {
+							ThreadScan.Result.append(hostname+":"+i);
+						}
 						
 						//判断端口的类别
 						switch(i){
@@ -130,23 +143,25 @@ public class TCPThread extends Thread{
 				}
 			}
 			
-			//扫描完成后，显示扫描完成，并将“确定”按钮设置为可用
-			if (i==MAX_port+Integer.parseInt(ThreadScan.maxThread.getText())){
-				ThreadScan.Result.append("\n"+"扫描完成...");
-				
-				//将"确定"按钮设置成为可用
-				if(!ThreadScan.Submit.isEnabled()){
-					ThreadScan.Submit.setEnabled(true);
-				}
-			}
+//			//扫描完成后，显示扫描完成，并将“确定”按钮设置为可用
+//			if (i==MAX_port+Integer.parseInt(ThreadScan.maxThread.getText())){
+//				ThreadScan.Result.append("\n"+"扫描完成...");
+//				
+//				//将"确定"按钮设置成为可用
+//				if(!ThreadScan.Submit.isEnabled()){
+//					ThreadScan.Submit.setEnabled(true);
+//				}
+//			}
 		}
 		
 		//按照主机名进行端口扫描
 		if(type == 1){
+			
 
-			for (i = MIN_port+threadnum; i < MAX_port+Integer.parseInt(ThreadScan.maxThread.getText()); i += Integer.parseInt(ThreadScan.maxThread.getText())){
+			for (i = MIN_port+threadnum; i <= MAX_port; i += Integer.parseInt(ThreadScan.maxThread.getText())){
 
 				try{
+					ports.add(i);
 					theTCPsocket=new Socket(hostAddress,i);
 					theTCPsocket.close();
 					ThreadScan.Result.append(" "+i);
@@ -196,7 +211,7 @@ public class TCPThread extends Thread{
 			}
 			
 			//扫描完成后，显示扫描完成，并将【确定】按钮设置为可用
-			if (i==MAX_port+Integer.parseInt(ThreadScan.maxThread.getText())){
+			if (i==MAX_port){
 				ThreadScan.Result.append("\n"+"扫描完成...");
 				
 				//将【确定】按钮设置成为可用
@@ -204,6 +219,8 @@ public class TCPThread extends Thread{
 					ThreadScan.Submit.setEnabled(true);
 				}
 			}
+//			Collections.sort(ports);
+//			System.out.println(ports);
 		}
 	}
 }

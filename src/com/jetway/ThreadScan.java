@@ -1,6 +1,7 @@
 package com.jetway;
 
 import java.net.*;
+import java.util.Collections;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -76,6 +77,8 @@ public class ThreadScan{
 	public static JMenuItem exitItem = new JMenuItem("退出(Q)");
 	public static JMenu myMenu2 = new JMenu("帮助");
 	public static JMenuItem helpItem = new JMenuItem("阅读");
+	
+	public static Thread[] threads;
 
 	public static void main(String[] args){
 
@@ -442,7 +445,7 @@ class SubmitAction implements ActionListener{
 				TCPThread.ipend = ipend;
 			}
 			
-			ipaddress = "" + ip1 + ip2 + ip3 + ipstart;
+			ipaddress = "" + ip1  + "."+ ip2 + "." + ip3 +"." + ipstart;
 			
 			/*
 			 *判断ip地址的有效性
@@ -528,9 +531,42 @@ class SubmitAction implements ActionListener{
 		ThreadScan.Result.append("线程数 "+ThreadScan.maxThread.getText()+"\n");
 		
 		//启动线程
+		
+		ThreadScan.threads = new Thread[maxThread];
 		for(int i=0;i<maxThread;i++){
-			new TCPThread("T" + i,i).start();
+			ThreadScan.threads[i] = new TCPThread("T" + i,i);
+			ThreadScan.threads[i].start();
 		}
+		
+		
+		
+		new Thread(
+				new Runnable() {
+					
+					@Override
+					public void run() {
+						while(true) {
+							boolean allFinish = true;
+							for(int i=0;i<maxThread;i++){
+								allFinish = allFinish && ThreadScan.threads[i].getState() == Thread.State.TERMINATED;
+							}
+							if(allFinish) break;
+						}
+						
+						ThreadScan.Result.append("\n"+"扫描完成...");
+						
+						Collections.sort(TCPThread.ports);
+						System.out.println(TCPThread.ports);
+						
+						//将【确定】按钮设置成为可用
+						if(!ThreadScan.Submit.isEnabled()){
+							ThreadScan.Submit.setEnabled(true);
+						}
+						
+					}
+				}
+				).start();
+		
 	}
 }
 
