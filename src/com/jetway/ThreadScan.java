@@ -520,7 +520,7 @@ class SubmitAction implements ActionListener{
 
 		/*
 		 *判断线程数量的有效范围
-		 *判断条件：大于1且小于200
+		 *判断条件：大于等于1且小于等于200
 		 */
 		if(maxThread<1 || maxThread>200){
 			ThreadScan.DLGINFO.setText("                    线程数为1-200的整数!                    ");
@@ -537,37 +537,40 @@ class SubmitAction implements ActionListener{
 			ThreadScan.threads[i] = new TCPThread("T" + i,i);
 			ThreadScan.threads[i].start();
 		}
-		
-		
-		
-		new Thread(
-				new Runnable() {
-					
-					@Override
-					public void run() {
-						while(true) {
-							boolean allFinish = true;
-							for(int i=0;i<maxThread;i++){
-								allFinish = allFinish && ThreadScan.threads[i].getState() == Thread.State.TERMINATED;
-							}
-							if(allFinish) break;
-						}
-						
-						ThreadScan.Result.append("\n"+"扫描完成...");
-						
-						Collections.sort(TCPThread.ports);
-						System.out.println(TCPThread.ports);
-						
-						//将【确定】按钮设置成为可用
-						if(!ThreadScan.Submit.isEnabled()){
-							ThreadScan.Submit.setEnabled(true);
-						}
-						
-					}
-				}
-				).start();
+		 
+		//等待所有线程结束
+		waitForAllThreadFinish(maxThread);
 		
 	}
+
+	private void waitForAllThreadFinish(int maxThread) {
+		new Thread() {
+
+			@Override
+			public void run() {
+				while(true) {
+					boolean allFinish = true;
+					for(int i=0;i<maxThread;i++){
+						allFinish = allFinish && ThreadScan.threads[i].getState() == Thread.State.TERMINATED;
+					}
+					if(allFinish) break;
+				}
+				
+				ThreadScan.Result.append("\n"+"扫描完成...");
+				
+				Collections.sort(TCPThread.ports);
+				System.out.println(TCPThread.ports);
+				
+				//将【确定】按钮设置成为可用
+				if(!ThreadScan.Submit.isEnabled()){
+					ThreadScan.Submit.setEnabled(true);
+				}
+			}
+			
+		}.start();
+	}
+	
+	
 }
 
 /*

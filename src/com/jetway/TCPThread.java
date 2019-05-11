@@ -74,8 +74,8 @@ public class TCPThread extends Thread{
 				
 				try{
 					//在给定主机名的情况下确定主机的 IP 地址
-					hostAddress=InetAddress.getByName(ipAll);
-					boolean reachable = hostAddress.isReachable(5000);
+					hostAddress=InetAddress.getByName(hostname);
+					boolean reachable = hostAddress.isReachable(1000);
 					if(!reachable) {
 						continue;
 					}
@@ -90,53 +90,59 @@ public class TCPThread extends Thread{
 				for (i = MIN_port+threadnum; i <= MAX_port; i += Integer.parseInt(ThreadScan.maxThread.getText())){
 
 					try{
+						
 						theTCPsocket=new Socket(hostAddress,i);
 						theTCPsocket.close();
+						ports.add(i);
 						synchronized (TCPThread.class) {
 							ThreadScan.Result.append(hostname+":"+i);
+							//判断端口的类别
+							switch(i){
+								case 21:
+									porttype = "(FTP)";
+									break;
+								case 23:
+									porttype = "(TELNET)";
+									break;
+								case 25:
+									porttype = "(SMTP)";
+									break; 
+								case 80:
+									porttype = "(HTTP)";	
+									break;
+								case 110:
+									porttype = "(POP)";
+									break;
+								case 139:
+									porttype = "(netBIOS)";
+									break;
+								case 1433:
+									porttype = "(SQL Server)";
+									break;
+								case 3389:
+									porttype = "(Terminal Service)";
+									break;
+								case 443:
+									porttype = "(HTTPS)";
+									break;
+								case 1521:
+									porttype = "(Oracle)";
+									break;
+								case 3306:
+									porttype = "(MySQL)";
+									break;
+							}
+							
+							//端口没有特定类别
+							if(porttype.equals("0")){
+								ThreadScan.Result.append("\n");
+							}
+							else{
+								ThreadScan.Result.append(":"+porttype+"\n");
+							}
 						}
 						
-						//判断端口的类别
-						switch(i){
-							case 21:
-								porttype = "(FTP)";
-								break;
-							case 23:
-								porttype = "(TELNET)";
-								break;
-							case 25:
-								porttype = "(SMTP)";
-								break; 
-							case 80:
-								porttype = "(HTTP)";	
-								break;
-							case 110:
-								porttype = "(POP)";
-								break;
-							case 139:
-								porttype = "(netBIOS)";
-								break;
-							case 1433:
-								porttype = "(SQL Server)";
-								break;
-							case 3389:
-								porttype = "(Terminal Service)";
-								break;
-							case 443:
-								porttype = "(HTTPS)";
-								break;
-							case 1521:
-								porttype = "(Oracle)";
-								break;
-						}
 						
-						//端口没有特定类别
-						if(porttype.equals("0")){
-							ThreadScan.Result.append("\n");
-						}
-						else{
-							ThreadScan.Result.append(":"+porttype+"\n");
-						}
 					}
 					catch (IOException e){
 					}
@@ -164,47 +170,53 @@ public class TCPThread extends Thread{
 					ports.add(i);
 					theTCPsocket=new Socket(hostAddress,i);
 					theTCPsocket.close();
-					ThreadScan.Result.append(" "+i);
-					switch(i){
-							case 21:
-								porttype = "(FTP)";
-								break;
-							case 23:
-								porttype = "(TELNET)";
-								break;
-							case 25:
-								porttype = "(SMTP)";
-								break; 
-							case 80:
-								porttype = "(HTTP)";	
-								break;
-							case 110:
-								porttype = "(POP)";
-								break;
-							case 139:
-								porttype = "(netBIOS)";
-								break;
-							case 1433:
-								porttype = "(SQL Server)";
-								break;
-							case 3389:
-								porttype = "(Terminal Service)";
-								break;
-							case 443:
-								porttype = "(HTTPS)";
-								break;
-							case 1521:
-								porttype = "(Oracle)";
-								break;
-						}
-						
-						//端口没有特定类别
-						if(porttype.equals("0")){
-							ThreadScan.Result.append("\n");
-						}
-						else{
-							ThreadScan.Result.append(":"+porttype+"\n");
-						}
+					synchronized (TCPThread.class) {
+						ThreadScan.Result.append(" "+i);
+						switch(i){
+						case 21:
+							porttype = "(FTP)";
+							break;
+						case 23:
+							porttype = "(TELNET)";
+							break;
+						case 25:
+							porttype = "(SMTP)";
+							break; 
+						case 80:
+							porttype = "(HTTP)";	
+							break;
+						case 110:
+							porttype = "(POP)";
+							break;
+						case 139:
+							porttype = "(netBIOS)";
+							break;
+						case 1433:
+							porttype = "(SQL Server)";
+							break;
+						case 3389:
+							porttype = "(Terminal Service)";
+							break;
+						case 443:
+							porttype = "(HTTPS)";
+							break;
+						case 1521:
+							porttype = "(Oracle)";
+							break;
+						case 3306:
+							porttype = "(MySQL)";
+							break;
+					}
+					
+					//端口没有特定类别
+					if(porttype.equals("0")){
+						ThreadScan.Result.append("\n");
+					}
+					else{
+						ThreadScan.Result.append(":"+porttype+"\n");
+					}
+					}
+					
 				}
 				catch (IOException e){
 				}
